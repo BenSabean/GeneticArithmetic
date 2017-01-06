@@ -1,8 +1,8 @@
 /*
- * GeneticArithmetic.c
+ *  @file GeneticArithmetic.c
  *
- *  Created on: 2016-11-22
- *      Author: Benjamin Sabean
+ *  @date 2016-11-22
+ *  @author Benjamin Sabean
  */
 
 #include <stdio.h>
@@ -22,6 +22,12 @@
 #define NIBBLE  4                  //4 bits
 #define DEBUG 1
 
+/*
+ *  @function generate_chromosone
+ *  @param none
+ *  @return The generated virtual chromosone as a bitstring.
+ *  Generates a 28-bit integer to be used as an artificial chromosone.
+ */
 unsigned int generate_chromosone() {
 
     unsigned int bitstring = 0;
@@ -38,6 +44,14 @@ unsigned int generate_chromosone() {
 
 }
 
+/*
+ *  @function perform_op
+ *  @param num1 The cumulaive total to be manipulated.
+ *  @param num2 The second number to be manipulated.
+ *  @param op The bit code of the operation to be used on the two numbers.
+ *  @return the new cumulative total
+ *  Performs the operation designated by @p op on @p num1 and @p num2
+ */
 int perform_op(int num1, int num2, int op) {
     
     if(op == ADD){
@@ -49,12 +63,21 @@ int perform_op(int num1, int num2, int op) {
     if(op == MULTIPLY) {
         return num2 * num1;
     }
-    if(op == DIVIDE) {    //possible divide by zero exception
+    if(op == DIVIDE) {
+        if(num1 == 0 ) {  //Handles divide by zero exception
+            return 0;
+        }
         return num2 / num1;
     }
     return 0;             //something went wrong, return 0
 }
 
+/*
+ *  @function evaluate_chromosone
+ *  @param chrom_array Array of artificial chromosones.
+ *  @return void
+ *  Evaluates all artificial chromosones in @p chrom_array.
+ */
 void evaluate_chromosone(unsigned int* chrom_array) {  //under developement
     unsigned int result_array[NUM_CHROMOSONES];
     uint8_t num1 = 0;          //Variables to hold number literals
@@ -62,16 +85,13 @@ void evaluate_chromosone(unsigned int* chrom_array) {  //under developement
     uint8_t operation = 0;     //variable to hold decimenal representation of operation
     uint32_t cur_chromosome;
     int i;
-    int cur_nibble;
+    int cur_nibble = 0;
 
     for (i = 0; i < NUM_CHROMOSONES; i++) {
-#if DEBUG
-        printf("Random number[%d](in function): %x\n", i, chrom_array[i]);
-#endif
         cur_chromosome = chrom_array[i];
         
         while (cur_chromosome > 0) {
-            cur_nibble = chrom_array[i] & NIBBLE_MASK;
+            cur_nibble = cur_chromosome & NIBBLE_MASK;
            
             if(cur_nibble < 10){        //check if value is a binary literal
                 if(operation == 0) {    //check if an operation has been defined yet
