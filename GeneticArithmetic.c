@@ -10,6 +10,7 @@
 #include <stdlib.h>
 #include <time.h>
 
+/** Op-codes **/
 #define ADD 0xA
 #define SUBTRACT 0xB
 #define MULTIPLY 0xC
@@ -48,28 +49,32 @@ unsigned int generate_chromosone() {
  *  @function perform_op
  *  @param num1 The cumulaive total to be manipulated.
  *  @param num2 The second number to be manipulated.
- *  @param op The bit code of the operation to be used on the two numbers.
+ *  @param op A pointer to the bit code of the operation to be used on the two numbers.
  *  @return the new cumulative total
  *  Performs the operation designated by @p op on @p num1 and @p num2
  */
-int perform_op(int num1, int num2, int op) {
+int perform_op(int total, int num, int8_t* op) {
     
-    if(op == ADD){
-        return num2 + num1;
+    int result = 0;
+    
+    if(*op == ADD){
+        result = total + num;
     }
-    if(op == SUBTRACT){
-        return num2 - num1;
+    if(*op == SUBTRACT){
+        result = total - num;
     }
-    if(op == MULTIPLY) {
-        return num2 * num1;
+    if(*op == MULTIPLY) {
+        result = total * num;
     }
-    if(op == DIVIDE) {
-        if(num1 == 0 ) {  //Handles divide by zero exception
+    if(*op == DIVIDE) {
+        if(num == 0 ) {  //Handles divide by zero exception
+            *op = -1;
             return 0;
         }
-        return num2 / num1;
+        result = total / num;
     }
-    return 0;             //something went wrong, return 0
+    *op = -1;
+    return result;
 }
 
 /*
@@ -79,14 +84,16 @@ int perform_op(int num1, int num2, int op) {
  *  Evaluates all artificial chromosones in @p chrom_array.
  */
 void evaluate_chromosone(unsigned int* chrom_array) {  //under developement
+    
     unsigned int result_array[NUM_CHROMOSONES];
-    uint8_t num1 = 0;          //Variables to hold number literals
-    uint8_t num2 = 0;          //     ^^
-    uint8_t operation = 0;     //variable to hold decimenal representation of operation
+    int8_t total = 0;         //Cumulative total
+    int8_t num = 0;           //Variable to hold number literal
+    int8_t operation = 0;     //variable to hold integer representation of operation
+    uint8_t chrom_init = 0;   //flag to determine if the chromosone has been initialized
     uint32_t cur_chromosome;
-    int i;
     int cur_nibble = 0;
 
+    unsigned int i;
     for (i = 0; i < NUM_CHROMOSONES; i++) {
         cur_chromosome = chrom_array[i];
         
@@ -95,41 +102,45 @@ void evaluate_chromosone(unsigned int* chrom_array) {  //under developement
            
             if(cur_nibble < 10){        //check if value is a binary literal
                 if(operation == 0) {    //check if an operation has been defined yet
-                    num1 = cur_nibble;
+                    total = cur_nibble;
+                    chrom_init = 1;     //set true
                 }
-                else {
-                    num2 = cur_nibble;
-                    num1 = perform_op(num1, num2, operation);  //num1 is the cumulative total
+                else if(operation >= 0xA){
+                    num = cur_nibble;
+                    total = perform_op(total, num, &operation);
                 }
             }
-            if(cur_nibble == ADD){
+            if(cur_nibble == ADD && chrom_init){
                 operation = ADD;
             }
-            if(cur_nibble == SUBTRACT){
+            if(cur_nibble == SUBTRACT && chrom_init){
                 operation = SUBTRACT;
             }
-            if(cur_nibble == MULTIPLY){
+            if(cur_nibble == MULTIPLY && chrom_init){
                 operation = MULTIPLY;
             }
-            if(cur_nibble == DIVIDE){
+            if(cur_nibble == DIVIDE && chrom_init){
                 operation = DIVIDE;
             }
             cur_chromosome >>= NIBBLE;
            
         }
-        result_array[i] = num1;
+        result_array[i] = total;
 #if DEBUG
         printf("Random number[%d]result: %d\n", i, result_array[i]);
 #endif
-        num1 = 0;
+        total = 0;        //reset local vaiables
+        operation = 0;
+        chrom_init = 0;
     }
 }
 
 int main(int argc, char** arg) {
+    
     unsigned int chrom_array[NUM_CHROMOSONES];
     srand((unsigned int) time(NULL));   //initialise random seed
 
-    int i;
+    unsigned int i;
     for (i = 0; i < NUM_CHROMOSONES; i++) {
         chrom_array[i] = generate_chromosone();
 #if DEBUG
