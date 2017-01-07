@@ -80,12 +80,12 @@ int perform_op(int total, int num, int8_t* op) {
 /*
  *  @function evaluate_chromosone
  *  @param chrom_array Array of artificial chromosones.
- *  @return void
+ *  @return An array of evaluated bitstrings.
  *  Evaluates all artificial chromosones in @p chrom_array.
  */
-void evaluate_chromosone(unsigned int* chrom_array) {  //under developement
+unsigned int* evaluate_chromosone(unsigned int* chrom_array) {  //under developement
     
-    unsigned int result_array[NUM_CHROMOSONES];
+    static unsigned int result_array[NUM_CHROMOSONES];
     int8_t total = 0;         //Cumulative total
     int8_t num = 0;           //Variable to hold number literal
     int8_t operation = 0;     //variable to hold integer representation of operation
@@ -133,11 +133,13 @@ void evaluate_chromosone(unsigned int* chrom_array) {  //under developement
         operation = 0;
         chrom_init = 0;
     }
+    return result_array;
 }
 
 int main(int argc, char** arg) {
     
     unsigned int chrom_array[NUM_CHROMOSONES];
+    unsigned int* result_array;
     srand((unsigned int) time(NULL));   //initialise random seed
 
     unsigned int i;
@@ -147,7 +149,13 @@ int main(int argc, char** arg) {
         printf("Random number[%d]: %x\n", i, chrom_array[i]);
 #endif
     }
-    evaluate_chromosone(chrom_array);
+    
+    result_array = evaluate_chromosone(chrom_array);
+#if DEBUG
+    for (i = 0; i < NUM_CHROMOSONES; i++) {
+        printf("Random number[%d] result (main): %d\n", i, result_array[i]);
+    }
+#endif
     return 0;
 
 }
