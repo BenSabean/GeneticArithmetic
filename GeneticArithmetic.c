@@ -4,6 +4,7 @@
  *  @date 2016-11-22
  *  @author Benjamin Sabean
  */
+#include "RouletteSelection.h"
 
 #include <stdio.h>
 #include <stdint.h>
@@ -22,6 +23,8 @@
 #define NIBBLE_MASK 0xF            //Mask to grab the least significant nibble
 #define NIBBLE  4                  //4 bits
 #define DEBUG 1
+
+#define GOAL 42
 
 /*
  *  @function generate_chromosone
@@ -83,9 +86,9 @@ int perform_op(int total, int num, int8_t* op) {
  *  @return An array of evaluated bitstrings.
  *  Evaluates all artificial chromosones in @p chrom_array.
  */
-unsigned int* evaluate_chromosone(unsigned int* chrom_array) {  //under developement
+ int* evaluate_chromosone(unsigned int* chrom_array) {  //under developement
     
-    static unsigned int result_array[NUM_CHROMOSONES];
+    static int result_array[NUM_CHROMOSONES];
     int8_t total = 0;         //Cumulative total
     int8_t num = 0;           //Variable to hold number literal
     int8_t operation = 0;     //variable to hold integer representation of operation
@@ -126,20 +129,67 @@ unsigned int* evaluate_chromosone(unsigned int* chrom_array) {  //under develope
            
         }
         result_array[i] = total;
-#if DEBUG
-        printf("Random number[%d]result: %d\n", i, result_array[i]);
-#endif
         total = 0;        //reset local vaiables
         operation = 0;
         chrom_init = 0;
     }
     return result_array;
 }
+/*
+ *  @function assign_fitness
+ *  @param results Array of evaluated chromosones
+ *  @param goal The number we want a chromosone to evaluate to
+ *  @return An array denoting the fitness level of each chromosone as denoted by 
+ *      the equation: fitness[n] = (1/(goal-result[n]). The function will return
+ *      2.0 if the goal has been achieved.
+ */
+float* assign_fitness(int* results, int goal) {
+    
+    static float fitness_scores[NUM_CHROMOSONES];
+    unsigned int difference = 0;
+    int i;
+    
+    for(i = 0; i< NUM_CHROMOSONES; i++) {
+        difference = (float) goal - (float) results[i];
+        if(difference > 0){
+            fitness_scores[i] = 1.0 / difference;
+        }
+        else {
+            fitness_scores[i] = 2.0;     //impossible value to indicate goal has been reached
+        }
+    }
+    
+    return fitness_scores;
+}
+
+/*
+ *  @function find_probablility
+ *  @param fitness_scores The fitness scores prduced by assign_fitness()
+ *  @return The probability of selecting each chromosone based off their 
+ *      @p fitness_scores
+ */
+float* find_probablility(float* fitness_scores) {
+    
+    static float probability[NUM_CHROMOSONES];
+    float sum = 0.0;
+    unsigned int i;
+    
+    for(i = 0; i< NUM_CHROMOSONES; i++) {
+        sum += fitness_scores[i];
+    }
+    for(i = 0; i < NUM_CHROMOSONES; i++) {
+        probability[i] = fitness_scores[i] / sum;
+    }
+    return probability;
+}
 
 int main(int argc, char** arg) {
     
     unsigned int chrom_array[NUM_CHROMOSONES];
-    unsigned int* result_array;
+    int* result_array;
+    float* fitness_scores;
+    float* probability;
+
     srand((unsigned int) time(NULL));   //initialise random seed
 
     unsigned int i;
@@ -153,11 +203,31 @@ int main(int argc, char** arg) {
     result_array = evaluate_chromosone(chrom_array);
 #if DEBUG
     for (i = 0; i < NUM_CHROMOSONES; i++) {
-        printf("Random number[%d] result (main): %d\n", i, result_array[i]);
+        printf("Random number[%d] result: %d\n", i, result_array[i]);
     }
 #endif
+    
+    fitness_scores = assign_fitness(result_array, GOAL);
+#if DEBUG
+    for (i = 0; i < NUM_CHROMOSONES; i++) {
+        printf("Random number[%d] fitness: %f\n", i, fitness_scores[i]);
+        if(fitness_scores[i] == 2.0) {
+            printf("goal has been achieved\n");
+            return 0;
+        }
+    }
+#endif
+    
+    probability = find_probablility(fitness_scores);
+#if DEBUG
+        for (i = 0; i < NUM_CHROMOSONES; i++) {
+            printf("Random number[%d] probability: %f\n", i, probability[i]);
+        }
+#endif
+    
     return 0;
 
 }
+
 
 
