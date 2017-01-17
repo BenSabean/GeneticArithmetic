@@ -186,12 +186,18 @@ float* find_probablility(float* fitness_scores) {
 int main(int argc, char** arg) {
     
     unsigned int chrom_array[NUM_CHROMOSONES];
+    unsigned int* selections = (unsigned int*) malloc(sizeof(unsigned int)*NUM_CHROMOSONES);
     int* result_array;
     float* fitness_scores;
     float* probability;
 
     srand((unsigned int) time(NULL));   //initialise random seed
-
+    if (selections == NULL)
+    {
+        printf(" Out of memory!\n");
+        return 1;
+    }
+    
     unsigned int i;
     for (i = 0; i < NUM_CHROMOSONES; i++) {
         chrom_array[i] = generate_chromosone();
@@ -225,6 +231,14 @@ int main(int argc, char** arg) {
         }
 #endif
     
+    selections = roultette_selecion(probability, selections, NUM_CHROMOSONES, NUM_CHROMOSONES);
+#if DEBUG
+    unsigned int* j = selections;
+    for(i = 0; i < NUM_CHROMOSONES; i++) {
+        printf("Selected number[%d] %d\n",i, *j);
+        j += sizeof(unsigned int);
+    }
+#endif
     return 0;
 
 }
